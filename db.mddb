@@ -1,0 +1,2 @@
+CREATE TABLE `lab_final`.`products` ( `id` INT NOT NULL AUTO_INCREMENT , `product_name` VARCHAR(255) NOT NULL , `category` VARCHAR(255) NOT NULL , `stock_date` DATE NOT NULL , `quantity` INT NOT NULL , `unit_price` INT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+​
