@@ -3,8 +3,27 @@ include './db.php';
 
 $error = "";
 $success = "";
+$student = null;
+
+// Fetch existing student data
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $query = "SELECT * FROM students WHERE id = ?";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $student = $result->fetch_assoc();
+    $stmt->close();
+    
+    if (!$student) {
+        header("Location: index.php");
+        exit();
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = $_POST['id'] ?? '';
     $name = $_POST['name'] ?? '';
     $address = $_POST['address'] ?? '';
     $phone = $_POST['phone'] ?? '';
@@ -16,18 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($name) || empty($address) || empty($phone) || empty($dob) || empty($gender) || empty($level) || empty($term)) {
         $error = "All fields are required";
     } else {
-        $query = "INSERT INTO students (name, address, phone, dob, gender, level, term) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $query = "UPDATE students SET name=?, address=?, phone=?, dob=?, gender=?, level=?, term=? WHERE id=?";
         
         $stmt = $db->prepare($query);
-        $stmt->bind_param("sssssss", $name, $address, $phone, $dob, $gender, $level, $term);
+        $stmt->bind_param("sssssssi", $name, $address, $phone, $dob, $gender, $level, $term, $id);
         
         if ($stmt->execute()) {
-            $success = "Student added successfully";
+            $success = "Student updated successfully";
             header("Location: index.php");
             exit();
         } else {
-            $error = "Error adding student: " . $db->error;
+            $error = "Error updating student: " . $db->error;
         }
         $stmt->close();
     }
@@ -40,10 +58,10 @@ $db->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Student</title>
+    <title>Edit Student</title>
 </head>
 <body>
-    <h2>Add New Student</h2>
+    <h2>Edit Student</h2>
     
     <?php if (!empty($error)): ?>
         <p class="error"><?php echo $error; ?></p>
@@ -54,31 +72,33 @@ $db->close();
     <?php endif; ?>
 
     <form method="POST" action="">
+        <input type="hidden" name="id" value="<?php echo $student['id']; ?>">
+        
         <div class="form-group">
             <label for="name">Student Name:</label>
-            <input type="text" id="name" name="name" required>
+            <input type="text" id="name" name="name" value="<?php echo $student['name']; ?>" required>
         </div>
 
         <div class="form-group">
             <label for="address">Address:</label>
-            <textarea id="address" name="address" required></textarea>
+            <textarea id="address" name="address" required><?php echo $student['address']; ?></textarea>
         </div>
 
         <div class="form-group">
             <label for="phone">Phone No:</label>
-            <input type="text" id="phone" name="phone" required>
+            <input type="text" id="phone" name="phone" value="<?php echo $student['phone']; ?>" required>
         </div>
 
         <div class="form-group">
             <label for="dob">Birthdate:</label>
-            <input type="date" id="dob" name="dob" required>
+            <input type="date" id="dob" name="dob" value="<?php echo $student['dob']; ?>" required>
         </div>
 
         <div class="form-group">
             <label for="gender">Gender:</label>
-            <input type="radio" id="male" name="gender" value="Male" required>
+            <input type="radio" id="male" name="gender" value="Male" <?php echo ($student['gender'] === 'Male') ? 'checked' : ''; ?> required>
             <label for="male">Male</label>
-            <input type="radio" id="female" name="gender" value="Female" required>
+            <input type="radio" id="female" name="gender" value="Female" <?php echo ($student['gender'] === 'Female') ? 'checked' : ''; ?> required>
             <label for="female">Female</label>
         </div>
 
@@ -86,10 +106,9 @@ $db->close();
             <label for="level">Level:</label>
             <select id="level" name="level" required>
                 <option value="">Select Level</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
+                <?php for($i = 1; $i <= 4; $i++): ?>
+                    <option value="<?php echo $i; ?>" <?php echo ($student['level'] == $i) ? 'selected' : ''; ?>><?php echo $i; ?></option>
+                <?php endfor; ?>
             </select>
         </div>
 
@@ -97,12 +116,13 @@ $db->close();
             <label for="term">Term:</label>
             <select id="term" name="term" required>
                 <option value="">Select Term</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
+                <?php for($i = 1; $i <= 2; $i++): ?>
+                    <option value="<?php echo $i; ?>" <?php echo ($student['term'] == $i) ? 'selected' : ''; ?>><?php echo $i; ?></option>
+                <?php endfor; ?>
             </select>
         </div>
 
-        <button type="submit">Add Student</button>
+        <button type="submit">Update Student</button>
     </form>
 </body>
 </html>

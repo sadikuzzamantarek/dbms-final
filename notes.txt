@@ -1,0 +1,8 @@
+id	int(11) Auto Increment	
+name	varchar(255)	
+address	varchar(255)	
+phone	varchar(255)	
+dob	date	
+gender	varchar(11)	
+level	varchar(10)	
+term	varchar(10)
